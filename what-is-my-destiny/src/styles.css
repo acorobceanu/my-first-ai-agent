@@ -1,0 +1,104 @@
+html {
+  min-width: 320px;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(23, 111, 107, 0.08), transparent 38%),
+    linear-gradient(315deg, rgba(180, 86, 43, 0.1), transparent 34%),
+    #f7f8f4;
+}
+
+.app-container {
+  padding-block: clamp(32px, 6vw, 72px);
+}
+
+.masthead {
+  max-width: 820px;
+  margin-bottom: 32px;
+}
+
+.brand-chip,
+.complete-chip {
+  align-self: flex-start;
+}
+
+.intro-copy {
+  max-width: 680px;
+  font-size: 1.08rem;
+}
+
+.status-alert {
+  margin-bottom: 24px;
+}
+
+.flow-card {
+  border: 1px solid rgba(30, 36, 34, 0.08);
+}
+
+.flow-card-content {
+  padding: clamp(24px, 5vw, 48px) !important;
+}
+
+.primary-action,
+.restart-action {
+  align-self: flex-start;
+}
+
+.session-id {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #43504c;
+}
+
+.progress-chip {
+  align-self: flex-start;
+}
+
+.progress-bar {
+  height: 8px !important;
+  border-radius: 999px;
+  background-color: #dce2dd !important;
+}
+
+.history-card {
+  border: 1px solid rgba(30, 36, 34, 0.08);
+}
+
+.answer-pair {
+  border-left: 3px solid #176f6b;
+  padding-left: 16px;
+}
+
+.recommendation-grid,
+.summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+
+.recommendation-card {
+  border: 1px solid #dce2dd;
+  box-shadow: none !important;
+}
+
+.list-icon {
+  min-width: 28px !important;
+  padding-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .primary-action,
+  .restart-action {
+    width: 100%;
+  }
+
+  .flow-card-content {
+    padding: 20px !important;
+  }
+}
