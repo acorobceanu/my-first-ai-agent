@@ -36,8 +36,9 @@ class AptitudeSessionServiceTest {
 
     @Test
     void completesWhenAiIsReady() {
+        InMemoryStore store = new InMemoryStore();
         AptitudeSessionService service = new AptitudeSessionService(
-                new InMemoryStore(),
+                store,
                 new StubAiClient(true),
                 new ObjectMapper(),
                 15
@@ -50,10 +51,11 @@ class AptitudeSessionServiceTest {
         assertThat(response.currentQuestion()).isNull();
         assertThat(response.findings().recommendations()).hasSize(1);
         assertThat(response.findings().recommendations().getFirst().profession()).isEqualTo("Product Manager");
+        assertThat(store.findById(created.sessionId())).isEmpty();
     }
 
     @Test
-    void rejectsAnswersAfterCompletion() {
+    void deletesSessionAfterCompletion() {
         AptitudeSessionService service = new AptitudeSessionService(
                 new InMemoryStore(),
                 new StubAiClient(true),
@@ -65,7 +67,7 @@ class AptitudeSessionServiceTest {
         service.answer(created.sessionId(), "I enjoy data, communication, and strategy.");
 
         assertThatThrownBy(() -> service.answer(created.sessionId(), "Another answer"))
-                .isInstanceOf(SessionAlreadyCompletedException.class);
+                .isInstanceOf(SessionNotFoundException.class);
     }
 
     private static final class InMemoryStore implements AptitudeSessionStore {
@@ -80,6 +82,11 @@ class AptitudeSessionServiceTest {
         @Override
         public Optional<AptitudeSession> findById(UUID sessionId) {
             return Optional.ofNullable(sessions.get(sessionId));
+        }
+
+        @Override
+        public void delete(AptitudeSession session) {
+            sessions.remove(session.getId());
         }
     }
 

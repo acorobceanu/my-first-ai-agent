@@ -10,4 +10,6 @@ public interface AptitudeSessionStore {
     AptitudeSession save(AptitudeSession session);
 
     Optional<AptitudeSession> findById(UUID sessionId);
+
+    void delete(AptitudeSession session);
 }

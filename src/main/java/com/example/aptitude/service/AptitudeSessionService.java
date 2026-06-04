@@ -79,7 +79,14 @@ public class AptitudeSessionService {
             session.setCurrentQuestion(decision.nextQuestion());
         }
 
-        return toResponse(store.save(session));
+        AptitudeSession savedSession = store.save(session);
+        SessionResponseDto response = toResponse(savedSession);
+
+        if (completed) {
+            store.delete(savedSession);
+        }
+
+        return response;
     }
 
     private SessionResponseDto toResponse(AptitudeSession session) {

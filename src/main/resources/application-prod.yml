@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:${APTITUDE_DATA_DIR:/opt/profession-aptitude-api/data}/aptitude;DB_CLOSE_DELAY=-1
+  h2:
+    console:
+      enabled: false
+
+aptitude:
+  cors:
+    allowed-origins: ${APTITUDE_ALLOWED_ORIGINS:}
