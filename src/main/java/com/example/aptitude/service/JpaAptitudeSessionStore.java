@@ -25,4 +25,9 @@ public class JpaAptitudeSessionStore implements AptitudeSessionStore {
     public Optional<AptitudeSession> findById(UUID sessionId) {
         return repository.findById(sessionId);
     }
+
+    @Override
+    public void delete(AptitudeSession session) {
+        repository.delete(session);
+    }
 }
