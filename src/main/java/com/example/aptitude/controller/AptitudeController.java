@@ -44,6 +44,6 @@ public class AptitudeController {
     @PostMapping("/{sessionId}/answers")
     @Operation(summary = "Submit an answer and receive either the next question or final findings")
     public SessionResponseDto answer(@PathVariable UUID sessionId, @Valid @RequestBody AnswerDto answer) {
-        return service.answer(sessionId, answer.answer());
+        return service.answer(sessionId, answer);
     }
 }

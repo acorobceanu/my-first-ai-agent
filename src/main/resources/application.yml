@@ -33,3 +33,5 @@ springdoc:
 
 aptitude:
   max-questions: 15
+  cors:
+    allowed-origin-patterns: ${APTITUDE_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*}

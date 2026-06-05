@@ -1,6 +1,7 @@
 package com.example.aptitude.service;
 
 import com.example.aptitude.dto.AnsweredQuestionDto;
+import com.example.aptitude.dto.QuestionDto;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
@@ -30,15 +31,29 @@ public class OpenAiAptitudeClient implements AptitudeAiClient {
     }
 
     @Override
-    public String firstQuestion() {
+    public QuestionDto firstQuestion() {
         return chatClient.prompt()
                 .user("""
                         Create the first question for a career aptitude interview.
-                        It should be broad, friendly, and answerable in a few sentences.
-                        Return only the question text.
+                        Prefer FREE_TEXT for broad discovery, but use SINGLE_CHOICE or MULTIPLE_CHOICE when options improve clarity.
+                        Return a JSON object matching this question shape:
+                        {
+                          "type": "FREE_TEXT",
+                          "prompt": "<one concise career aptitude question>",
+                          "options": []
+                        }
+
+                        Choice question rules:
+                        - type must be SINGLE_CHOICE for one-of-many radio questions.
+                        - type must be MULTIPLE_CHOICE for many-of-many checkbox questions.
+                        - Provide 3 to 7 concise options for choice questions.
+                        - Each option needs a stable lowercase id, a label, and type.
+                        - Option type is STANDARD, ALL_OF_THE_ABOVE, or NONE_OF_THE_ABOVE.
+                        - Include ALL_OF_THE_ABOVE only when every standard option could reasonably apply together.
+                        - Include NONE_OF_THE_ABOVE only when none of the standard options is a meaningful answer.
                         """)
                 .call()
-                .content();
+                .entity(QuestionDto.class);
     }
 
     @Override
@@ -56,7 +71,8 @@ public class OpenAiAptitudeClient implements AptitudeAiClient {
 
                 Decide whether you have enough evidence for a strong profession suggestion.
                 If Questions already asked is equal to or greater than Max questions allowed, ready must be true.
-                If ready is false, provide exactly one nextQuestion.
+                If ready is false, provide exactly one nextQuestion using the question shape below.
+                If ready is false, nextQuestion.prompt must not repeat or closely paraphrase any previous question in the transcript.
                 If ready is true, provide findings with:
                 - a concise summary
                 - 3 profession recommendations ranked best first
@@ -65,6 +81,35 @@ public class OpenAiAptitudeClient implements AptitudeAiClient {
                 - cross-cutting strengths and cautions
 
                 Return a JSON object matching this shape:
+                {
+                  "ready": false,
+                  "nextQuestion": {
+                    "type": "MULTIPLE_CHOICE",
+                    "prompt": "<one new career aptitude question not already asked>",
+                    "options": [
+                      { "id": "option-one", "label": "<choice label>", "type": "STANDARD" },
+                      { "id": "option-two", "label": "<choice label>", "type": "STANDARD" },
+                      { "id": "option-three", "label": "<choice label>", "type": "STANDARD" },
+                      { "id": "all-of-the-above", "label": "All of the above", "type": "ALL_OF_THE_ABOVE" },
+                      { "id": "none-of-the-above", "label": "None of the above", "type": "NONE_OF_THE_ABOVE" }
+                    ]
+                  },
+                  "findings": null
+                }
+
+                Question shape rules:
+                - type must be FREE_TEXT, SINGLE_CHOICE, or MULTIPLE_CHOICE.
+                - FREE_TEXT must have an empty options array.
+                - SINGLE_CHOICE is one-of-many.
+                - MULTIPLE_CHOICE is many-of-many.
+                - Do not copy placeholder text or example ids into your answer.
+                - The question must ask for new evidence that is not already answered by the transcript.
+                - Choice questions must include 3 to 7 concise options.
+                - Option type must be STANDARD, ALL_OF_THE_ABOVE, or NONE_OF_THE_ABOVE.
+                - Include ALL_OF_THE_ABOVE only when every standard option could reasonably apply together.
+                - Include NONE_OF_THE_ABOVE only when none of the standard options is a meaningful answer.
+
+                When ready is true, return:
                 {
                   "ready": true,
                   "nextQuestion": null,

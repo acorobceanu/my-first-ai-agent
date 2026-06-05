@@ -11,6 +11,7 @@ public record SessionResponseDto(
         SessionStatus status,
         int questionCount,
         int maxQuestions,
+        QuestionDto question,
         String currentQuestion,
         List<AnsweredQuestionDto> answers,
         AptitudeFindingsDto findings,

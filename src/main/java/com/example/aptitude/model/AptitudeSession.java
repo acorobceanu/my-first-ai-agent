@@ -10,6 +10,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import com.example.aptitude.dto.QuestionDto;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,6 +33,10 @@ public class AptitudeSession {
     @Lob
     private String findingsJson;
 
+    @Lob
+    private String currentQuestionJson;
+
+    @Lob
     private String currentQuestion;
 
     @Column(nullable = false)
@@ -45,11 +51,12 @@ public class AptitudeSession {
     protected AptitudeSession() {
     }
 
-    public AptitudeSession(UUID id, String currentQuestion) {
+    public AptitudeSession(UUID id, QuestionDto currentQuestion, String currentQuestionJson) {
         this.id = id;
         this.status = SessionStatus.IN_PROGRESS;
         this.answersJson = "[]";
-        this.currentQuestion = currentQuestion;
+        this.currentQuestion = currentQuestion.prompt();
+        this.currentQuestionJson = currentQuestionJson;
         this.questionCount = 1;
     }
 
@@ -99,6 +106,14 @@ public class AptitudeSession {
 
     public void setCurrentQuestion(String currentQuestion) {
         this.currentQuestion = currentQuestion;
+    }
+
+    public String getCurrentQuestionJson() {
+        return currentQuestionJson;
+    }
+
+    public void setCurrentQuestionJson(String currentQuestionJson) {
+        this.currentQuestionJson = currentQuestionJson;
     }
 
     public int getQuestionCount() {

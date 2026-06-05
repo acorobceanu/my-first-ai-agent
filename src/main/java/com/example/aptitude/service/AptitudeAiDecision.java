@@ -1,10 +1,11 @@
 package com.example.aptitude.service;
 
 import com.example.aptitude.dto.AptitudeFindingsDto;
+import com.example.aptitude.dto.QuestionDto;
 
 public record AptitudeAiDecision(
         boolean ready,
-        String nextQuestion,
+        QuestionDto nextQuestion,
         AptitudeFindingsDto findings
 ) {
 }
