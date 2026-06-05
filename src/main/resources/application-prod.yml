@@ -8,3 +8,4 @@ spring:
 aptitude:
   cors:
     allowed-origins: ${APTITUDE_ALLOWED_ORIGINS:}
+    allowed-origin-patterns: ${APTITUDE_ALLOWED_ORIGIN_PATTERNS:}

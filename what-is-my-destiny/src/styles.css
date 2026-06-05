@@ -66,6 +66,19 @@ body {
   background-color: #dce2dd !important;
 }
 
+.choice-list {
+  gap: 8px;
+}
+
+.choice-option {
+  min-height: 48px;
+  margin: 0 !important;
+  padding: 8px 12px;
+  border: 1px solid #dce2dd;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
 .history-card {
   border: 1px solid rgba(30, 36, 34, 0.08);
 }

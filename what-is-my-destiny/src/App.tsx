@@ -10,27 +10,39 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   Container,
   Divider,
+  FormControlLabel,
+  FormGroup,
   LinearProgress,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
+  Radio,
+  RadioGroup,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { FormEvent, useMemo, useState } from 'react';
 import { createSession, submitAnswer } from './api/aptitudeClient';
-import type { AptitudeFindings, ProfessionRecommendation, SessionResponse } from './api/types';
+import type {
+  AptitudeFindings,
+  ProfessionRecommendation,
+  Question,
+  QuestionOption,
+  SessionResponse,
+} from './api/types';
 
 const MAX_ANSWER_LENGTH = 2000;
 
 export default function App() {
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [answer, setAnswer] = useState('');
+  const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +55,24 @@ export default function App() {
     return Math.min((session.questionCount / session.maxQuestions) * 100, 100);
   }, [session]);
 
+  const currentQuestion = useMemo(() => {
+    if (!session || session.status !== 'IN_PROGRESS') {
+      return null;
+    }
+
+    const fallbackQuestion: Question = {
+      type: 'FREE_TEXT',
+      prompt: session.currentQuestion ?? '',
+      options: [],
+    };
+
+    return session.question ?? fallbackQuestion;
+  }, [session]);
+
+  const canSubmit = currentQuestion?.type === 'FREE_TEXT'
+    ? Boolean(answer.trim())
+    : selectedOptionIds.length > 0;
+
   const startSession = async () => {
     setIsStarting(true);
     setError(null);
@@ -51,6 +81,7 @@ export default function App() {
       const nextSession = await createSession();
       setSession(nextSession);
       setAnswer('');
+      setSelectedOptionIds([]);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -61,7 +92,7 @@ export default function App() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!session || !answer.trim()) {
+    if (!session || !currentQuestion || !canSubmit) {
       return;
     }
 
@@ -69,9 +100,14 @@ export default function App() {
     setError(null);
 
     try {
-      const nextSession = await submitAnswer(session.sessionId, answer.trim());
+      const nextSession = await submitAnswer(
+        session.sessionId,
+        currentQuestion.type === 'FREE_TEXT' ? answer.trim() : '',
+        selectedOptionIds,
+      );
       setSession(nextSession);
       setAnswer('');
+      setSelectedOptionIds([]);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -142,28 +178,27 @@ export default function App() {
                     <Typography variant="overline" color="text.secondary">
                       Current question
                     </Typography>
-                    <Typography variant="h2">{session.currentQuestion}</Typography>
+                    <Typography variant="h2">{currentQuestion?.prompt}</Typography>
                   </Stack>
 
                   <Box component="form" onSubmit={handleSubmit}>
                     <Stack spacing={2}>
-                      <TextField
-                        label="Your answer"
-                        value={answer}
-                        onChange={(event) => setAnswer(event.target.value)}
-                        multiline
-                        minRows={6}
-                        inputProps={{ maxLength: MAX_ANSWER_LENGTH }}
-                        helperText={`${answer.length}/${MAX_ANSWER_LENGTH}`}
-                        disabled={isSubmitting}
-                        fullWidth
-                      />
+                      {currentQuestion && (
+                        <QuestionInput
+                          question={currentQuestion}
+                          answer={answer}
+                          selectedOptionIds={selectedOptionIds}
+                          disabled={isSubmitting}
+                          onAnswerChange={setAnswer}
+                          onSelectedOptionIdsChange={setSelectedOptionIds}
+                        />
+                      )}
                       <Button
                         type="submit"
                         size="large"
                         variant="contained"
                         endIcon={<SendIcon />}
-                        disabled={!answer.trim() || isSubmitting}
+                        disabled={!canSubmit || isSubmitting}
                         className="primary-action"
                       >
                         {isSubmitting ? 'Sending...' : 'Next'}
@@ -196,6 +231,114 @@ export default function App() {
       </Container>
     </Box>
   );
+}
+
+function QuestionInput({
+  question,
+  answer,
+  selectedOptionIds,
+  disabled,
+  onAnswerChange,
+  onSelectedOptionIdsChange,
+}: {
+  question: Question;
+  answer: string;
+  selectedOptionIds: string[];
+  disabled: boolean;
+  onAnswerChange: (answer: string) => void;
+  onSelectedOptionIdsChange: (selectedOptionIds: string[]) => void;
+}) {
+  if (question.type === 'FREE_TEXT') {
+    return (
+      <TextField
+        label="Your answer"
+        value={answer}
+        onChange={(event) => onAnswerChange(event.target.value)}
+        multiline
+        minRows={6}
+        inputProps={{ maxLength: MAX_ANSWER_LENGTH }}
+        helperText={`${answer.length}/${MAX_ANSWER_LENGTH}`}
+        disabled={disabled}
+        fullWidth
+      />
+    );
+  }
+
+  if (question.type === 'SINGLE_CHOICE') {
+    return (
+      <RadioGroup
+        value={selectedOptionIds[0] ?? ''}
+        onChange={(event) => onSelectedOptionIdsChange([event.target.value])}
+        className="choice-list"
+      >
+        {question.options.map((option) => (
+          <FormControlLabel
+            key={option.id}
+            value={option.id}
+            control={<Radio />}
+            label={option.label}
+            disabled={disabled}
+            className="choice-option"
+          />
+        ))}
+      </RadioGroup>
+    );
+  }
+
+  return (
+    <FormGroup className="choice-list">
+      {question.options.map((option) => (
+        <FormControlLabel
+          key={option.id}
+          control={
+            <Checkbox
+              checked={selectedOptionIds.includes(option.id)}
+              onChange={() => {
+                onSelectedOptionIdsChange(toggleMultipleChoiceOption(
+                  question.options,
+                  selectedOptionIds,
+                  option,
+                ));
+              }}
+            />
+          }
+          label={option.label}
+          disabled={disabled}
+          className="choice-option"
+        />
+      ))}
+    </FormGroup>
+  );
+}
+
+function toggleMultipleChoiceOption(
+  options: QuestionOption[],
+  selectedOptionIds: string[],
+  option: QuestionOption,
+) {
+  const isSelected = selectedOptionIds.includes(option.id);
+
+  if (isSelected) {
+    return selectedOptionIds.filter((id) => id !== option.id);
+  }
+
+  if (option.type === 'NONE_OF_THE_ABOVE') {
+    return [option.id];
+  }
+
+  const withoutNone = selectedOptionIds.filter((id) => {
+    const selectedOption = options.find((candidate) => candidate.id === id);
+    return selectedOption?.type !== 'NONE_OF_THE_ABOVE';
+  });
+
+  if (option.type === 'ALL_OF_THE_ABOVE') {
+    return [option.id];
+  }
+
+  return [...withoutNone.filter((id) => {
+    const selectedOption = options.find((candidate) => candidate.id === id);
+    return selectedOption?.type !== 'ALL_OF_THE_ABOVE';
+  }), option.id];
 }
 
 function SessionProgress({ session, progress }: { session: SessionResponse; progress: number }) {

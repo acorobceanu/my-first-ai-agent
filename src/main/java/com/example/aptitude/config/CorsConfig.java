@@ -14,9 +14,13 @@ import java.util.List;
 public class CorsConfig {
 
     @Bean
-    CorsFilter corsFilter(@Value("${aptitude.cors.allowed-origins:}") String allowedOrigins) {
+    CorsFilter corsFilter(
+            @Value("${aptitude.cors.allowed-origins:}") String allowedOrigins,
+            @Value("${aptitude.cors.allowed-origin-patterns:}") String allowedOriginPatterns
+    ) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(parseOrigins(allowedOrigins));
+        configuration.setAllowedOrigins(parseValues(allowedOrigins));
+        configuration.setAllowedOriginPatterns(parseValues(allowedOriginPatterns));
         configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type"));
 
@@ -25,14 +29,14 @@ public class CorsConfig {
         return new CorsFilter(source);
     }
 
-    private List<String> parseOrigins(String allowedOrigins) {
-        if (allowedOrigins == null || allowedOrigins.isBlank()) {
+    private List<String> parseValues(String values) {
+        if (values == null || values.isBlank()) {
             return List.of();
         }
 
-        return Arrays.stream(allowedOrigins.split(","))
+        return Arrays.stream(values.split(","))
                 .map(String::trim)
-                .filter(origin -> !origin.isBlank())
+                .filter(value -> !value.isBlank())
                 .toList();
     }
 }

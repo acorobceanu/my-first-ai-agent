@@ -39,9 +39,13 @@ export function getSession(sessionId: string): Promise<SessionResponse> {
   return requestSession(`${SESSIONS_PATH}/${sessionId}`);
 }
 
-export function submitAnswer(sessionId: string, answer: string): Promise<SessionResponse> {
+export function submitAnswer(
+  sessionId: string,
+  answer: string,
+  selectedOptionIds: string[] = [],
+): Promise<SessionResponse> {
   return requestSession(`${SESSIONS_PATH}/${sessionId}/answers`, {
     method: 'POST',
-    body: JSON.stringify({ answer }),
+    body: JSON.stringify({ answer, selectedOptionIds }),
   });
 }
