@@ -62,4 +62,14 @@ aptitude.cors.allowed-origin-patterns: ${APTITUDE_ALLOWED_ORIGIN_PATTERNS:http:/
 
 Local development allows `localhost` and `127.0.0.1` on any port by default. In the `prod` profile, set `APTITUDE_ALLOWED_ORIGINS` or `APTITUDE_ALLOWED_ORIGIN_PATTERNS` explicitly.
 
+## Nginx
+
+The Lightsail nginx proxy can be hardened to reject unknown or malformed hostnames before requests reach Tomcat:
+
+```bash
+LIGHTSAIL_HOST=44.222.68.217 ./scripts/configure-nginx.sh
+```
+
+Set `SSH_KEY=/path/to/key` if the instance key is not available through your SSH agent.
+
 Spring AI OpenAI docs reference the `spring-ai-starter-model-openai` starter and `spring.ai.openai.*` configuration. The app uses Spring AI `1.1.7`, which was announced as the current stable release line in May 2026.
