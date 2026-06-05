@@ -76,6 +76,7 @@ UI_DIR="$ROOT_DIR/what-is-my-destiny"
 JAR_NAME="profession-aptitude-api-0.0.1-SNAPSHOT.jar"
 JAR_PATH="$ROOT_DIR/target/$JAR_NAME"
 REMOTE_JAR_PATH="/opt/profession-aptitude-api/profession-aptitude-api.jar"
+REMOTE_TMP_JAR_PATH="/tmp/profession-aptitude-api.jar.new"
 S3_JAR_KEY="backend/profession-aptitude-api.jar"
 S3_JAR_URI="s3://$BUCKET/$S3_JAR_KEY"
 S3_WEBSITE_HOST="$BUCKET.s3-website-$AWS_REGION.amazonaws.com"
@@ -113,7 +114,7 @@ trap cleanup EXIT
 
 echo "Installing backend jar on Lightsail and restarting service..."
 ssh "${SSH_ARGS[@]}" "$SSH_TARGET" \
-  "curl -fsSL '$PUBLIC_JAR_URL' -o '$REMOTE_JAR_PATH' && sudo systemctl restart '$SERVICE_NAME' && sudo systemctl is-active --quiet '$SERVICE_NAME'"
+  "curl -fsSL '$PUBLIC_JAR_URL' -o '$REMOTE_TMP_JAR_PATH' && sudo systemctl stop '$SERVICE_NAME' && sudo install -m 0644 '$REMOTE_TMP_JAR_PATH' '$REMOTE_JAR_PATH' && rm -f '$REMOTE_TMP_JAR_PATH' && sudo systemctl start '$SERVICE_NAME' && sudo systemctl is-active --quiet '$SERVICE_NAME'"
 
 echo "Building frontend with backend API URL..."
 cd "$UI_DIR"
